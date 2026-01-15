@@ -352,7 +352,12 @@ async def a11y(port):
         pw, browser = await _connect(port)
         try:
             page = await _get_page(browser)
-            snapshot = await page.accessibility.snapshot()
+            # Use CDP directly since page.accessibility doesn't work over CDP connections
+            cdp = await page.context.new_cdp_session(page)
+            result = await cdp.send("Accessibility.getFullAXTree")
+            # Transform to a simpler format
+            nodes = result.get("nodes", [])
+            snapshot = _build_a11y_tree(nodes)
             click.echo(json.dumps(snapshot, indent=2))
         finally:
             await browser.close()
@@ -360,6 +365,72 @@ async def a11y(port):
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         sys.exit(1)
+
+
+def _build_a11y_tree(nodes: list) -> dict | None:
+    """Build a simplified accessibility tree from CDP AXTree nodes."""
+    if not nodes:
+        return None
+
+    # Create a map of nodeId -> node for quick lookup (nodeIds are strings)
+    node_map = {node.get("nodeId"): node for node in nodes if node.get("nodeId")}
+
+    def get_children(node: dict) -> list[dict]:
+        """Recursively get children, skipping ignored nodes."""
+        children = []
+        for child_id in node.get("childIds", []):
+            child_node = node_map.get(child_id)
+            if not child_node:
+                continue
+            if child_node.get("ignored"):
+                # Traverse through ignored nodes to find meaningful children
+                children.extend(get_children(child_node))
+            else:
+                children.append(child_node)
+        return children
+
+    def build_node(node: dict) -> dict | None:
+        role = node.get("role", {}).get("value", "")
+        name = node.get("name", {}).get("value", "")
+
+        # Skip ignored nodes at the top level
+        if node.get("ignored"):
+            return None
+
+        result = {}
+        if role:
+            result["role"] = role
+        if name:
+            result["name"] = name
+
+        # Add other useful properties
+        for prop in node.get("properties", []):
+            prop_name = prop.get("name")
+            prop_value = prop.get("value", {}).get("value")
+            if prop_name and prop_value is not None:
+                if prop_name in ("focused", "disabled", "checked", "selected", "expanded"):
+                    result[prop_name] = prop_value
+
+        # Build children, skipping ignored nodes
+        children = []
+        for child_node in get_children(node):
+            child_result = build_node(child_node)
+            if child_result:
+                children.append(child_result)
+
+        if children:
+            result["children"] = children
+
+        # Skip empty nodes (no role, no name, no meaningful children)
+        if not result.get("role") and not result.get("name") and not result.get("children"):
+            return None
+
+        return result
+
+    # Find root node (usually first node)
+    if nodes:
+        return build_node(nodes[0])
+    return None
 
 
 @group.command()
