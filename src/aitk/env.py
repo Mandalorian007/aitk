@@ -53,6 +53,7 @@ CREDENTIALS = {
     "OPENAI_API_KEY": "https://platform.openai.com/api-keys",
     "PERPLEXITY_API_KEY": "https://perplexity.ai/settings/api",
     "FIRECRAWL_API_KEY": "https://firecrawl.dev/app/api-keys",
+    "ELEVENLABS_API_KEY": "https://elevenlabs.io/app/settings/api-keys",
 }
 
 

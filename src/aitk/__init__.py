@@ -5,7 +5,7 @@ from pathlib import Path
 import click
 
 from .env import get_credential
-from . import image, video, search, scrape, browser
+from . import image, video, audio, search, scrape, browser
 
 
 @click.group()
@@ -17,6 +17,7 @@ def cli():
     \b
     aitk image    Image generation
     aitk video    Video generation
+    aitk audio    Audio generation
     aitk search   Web search
     aitk scrape   Web scraping
     aitk browser  Browser automation
@@ -36,12 +37,14 @@ def config():
     \b
     Keys prompted:
       OPENAI_API_KEY      Required for: image, video
+      ELEVENLABS_API_KEY  Required for: audio
       PERPLEXITY_API_KEY  Required for: search
       FIRECRAWL_API_KEY   Required for: scrape
 
     \b
     Alternative: Set environment variables instead of using this command.
       export OPENAI_API_KEY=sk-...
+      export ELEVENLABS_API_KEY=sk_...
       export PERPLEXITY_API_KEY=pplx-...
       export FIRECRAWL_API_KEY=fc-...
 
@@ -56,6 +59,7 @@ def config():
     keys = {}
     for key, tools in [
         ("OPENAI_API_KEY", "image, video"),
+        ("ELEVENLABS_API_KEY", "audio"),
         ("PERPLEXITY_API_KEY", "search"),
         ("FIRECRAWL_API_KEY", "scrape"),
     ]:
@@ -78,6 +82,7 @@ def config():
 
 cli.add_command(image.group, name="image")
 cli.add_command(video.group, name="video")
+cli.add_command(audio.group, name="audio")
 cli.add_command(search.command, name="search")
 cli.add_command(scrape.group, name="scrape")
 cli.add_command(browser.group, name="browser")
