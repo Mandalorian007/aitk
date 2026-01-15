@@ -118,7 +118,15 @@ def group():
 @group.command()
 @_run_async
 async def init():
-    """Install Playwright and Chromium."""
+    """
+    Install Playwright and Chromium browser.
+
+    Run this once before using other browser commands. Downloads ~150MB.
+
+    \b
+    Example:
+      aitk browser init
+    """
     if PLAYWRIGHT_AVAILABLE:
         click.echo("Playwright: installed")
     else:
@@ -145,11 +153,22 @@ async def init():
 
 
 @group.command()
-@click.option("--port", type=int, default=DEFAULT_PORT)
-@click.option("--headed", is_flag=True, help="Show browser window")
+@click.option("--port", type=int, default=DEFAULT_PORT, help="CDP port (default: 9222)")
+@click.option("--headed", is_flag=True, help="Show browser window (default: headless)")
 @_run_async
 async def start(port, headed):
-    """Start browser with remote debugging."""
+    """
+    Start browser with remote debugging enabled.
+
+    Launches Chromium in headless mode by default. Use --headed to see the
+    browser window. Use different --port values for parallel sessions.
+
+    \b
+    Examples:
+      aitk browser start
+      aitk browser start --headed
+      aitk browser start --port 9223
+    """
     chromium = _ensure_init()
 
     if _is_port_in_use(port):
@@ -192,11 +211,18 @@ async def start(port, headed):
 
 @group.command()
 @click.argument("url")
-@click.option("--port", type=int, default=DEFAULT_PORT)
-@click.option("--new", is_flag=True, help="Open in new tab")
+@click.option("--port", type=int, default=DEFAULT_PORT, help="CDP port (default: 9222)")
+@click.option("--new", is_flag=True, help="Open in new tab instead of current")
 @_run_async
 async def nav(url, port, new):
-    """Navigate to URL."""
+    """
+    Navigate to a URL.
+
+    \b
+    Examples:
+      aitk browser nav "https://example.com"
+      aitk browser nav "https://google.com" --new
+    """
     try:
         pw, browser = await _connect(port)
         try:
@@ -216,12 +242,20 @@ async def nav(url, port, new):
 
 
 @group.command()
-@click.option("--path", type=click.Path(), help="Output path")
-@click.option("--full", is_flag=True, help="Full page screenshot")
-@click.option("--port", type=int, default=DEFAULT_PORT)
+@click.option("--path", type=click.Path(), help="Output path (default: /tmp/screenshot-<timestamp>.png)")
+@click.option("--full", is_flag=True, help="Capture full scrollable page")
+@click.option("--port", type=int, default=DEFAULT_PORT, help="CDP port (default: 9222)")
 @_run_async
 async def screenshot(path, full, port):
-    """Take screenshot."""
+    """
+    Take screenshot of current page.
+
+    \b
+    Examples:
+      aitk browser screenshot
+      aitk browser screenshot --path page.png
+      aitk browser screenshot --full --path fullpage.png
+    """
     try:
         pw, browser = await _connect(port)
         try:
@@ -242,10 +276,18 @@ async def screenshot(path, full, port):
 
 @group.command("click")
 @click.argument("selector")
-@click.option("--port", type=int, default=DEFAULT_PORT)
+@click.option("--port", type=int, default=DEFAULT_PORT, help="CDP port (default: 9222)")
 @_run_async
 async def click_cmd(selector, port):
-    """Click element."""
+    """
+    Click an element by CSS selector.
+
+    \b
+    Examples:
+      aitk browser click "#submit-button"
+      aitk browser click "button[type=submit]"
+      aitk browser click ".login-link"
+    """
     try:
         pw, browser = await _connect(port)
         try:
@@ -263,10 +305,20 @@ async def click_cmd(selector, port):
 @group.command("type")
 @click.argument("selector")
 @click.argument("text")
-@click.option("--port", type=int, default=DEFAULT_PORT)
+@click.option("--port", type=int, default=DEFAULT_PORT, help="CDP port (default: 9222)")
 @_run_async
 async def type_cmd(selector, text, port):
-    """Type text into input field."""
+    """
+    Type text into an input field by CSS selector.
+
+    Clears existing content before typing.
+
+    \b
+    Examples:
+      aitk browser type "#email" "user@example.com"
+      aitk browser type "input[name=password]" "secret123"
+      aitk browser type ".search-box" "search query"
+    """
     try:
         pw, browser = await _connect(port)
         try:
@@ -282,10 +334,20 @@ async def type_cmd(selector, text, port):
 
 
 @group.command()
-@click.option("--port", type=int, default=DEFAULT_PORT)
+@click.option("--port", type=int, default=DEFAULT_PORT, help="CDP port (default: 9222)")
 @_run_async
 async def a11y(port):
-    """Get accessibility tree (useful for understanding page structure)."""
+    """
+    Get accessibility tree snapshot as JSON.
+
+    Returns the page's accessibility tree, which describes the semantic
+    structure. Useful for understanding page layout and finding elements
+    without inspecting HTML.
+
+    \b
+    Example:
+      aitk browser a11y
+    """
     try:
         pw, browser = await _connect(port)
         try:
@@ -301,10 +363,17 @@ async def a11y(port):
 
 
 @group.command()
-@click.option("--port", type=int, default=DEFAULT_PORT)
+@click.option("--port", type=int, default=DEFAULT_PORT, help="CDP port (default: 9222)")
 @_run_async
 async def status(port):
-    """Check if browser is running."""
+    """
+    Check if browser is running and show current state.
+
+    \b
+    Example:
+      aitk browser status
+      aitk browser status --port 9223
+    """
     try:
         pw, browser = await _connect(port)
         try:
@@ -320,10 +389,17 @@ async def status(port):
 
 
 @group.command()
-@click.option("--port", type=int, default=DEFAULT_PORT)
+@click.option("--port", type=int, default=DEFAULT_PORT, help="CDP port (default: 9222)")
 @_run_async
 async def close(port):
-    """Close browser."""
+    """
+    Close browser and terminate the process.
+
+    \b
+    Example:
+      aitk browser close
+      aitk browser close --port 9223
+    """
     try:
         pw, browser = await _connect(port)
         await browser.close()

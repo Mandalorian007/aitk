@@ -28,16 +28,25 @@ def group():
 
 @group.command()
 @click.argument("prompt")
-@click.option("-o", "--output", help="Output path")
-@click.option("-r", "--reference", multiple=True, type=click.Path(exists=True), help="Reference image(s)")
-@click.option("-s", "--size", type=click.Choice(["1024x1024", "1536x1024", "1024x1536"]), default="1024x1024")
-@click.option("-q", "--quality", type=click.Choice(["low", "medium", "high"]), default=None)
-@click.option("-f", "--format", "output_format", type=click.Choice(["png", "jpeg", "webp"]), default="png")
-@click.option("-b", "--background", type=click.Choice(["opaque", "transparent"]), default=None)
-@click.option("-n", "--count", type=click.IntRange(1, 10), default=1)
+@click.option("-o", "--output", help="Output path (default: image_<timestamp>.png)")
+@click.option("-r", "--reference", multiple=True, type=click.Path(exists=True), help="Reference image(s) to guide generation")
+@click.option("-s", "--size", type=click.Choice(["1024x1024", "1536x1024", "1024x1536"]), default="1024x1024", help="Image dimensions (default: 1024x1024)")
+@click.option("-q", "--quality", type=click.Choice(["low", "medium", "high"]), default=None, help="Generation quality")
+@click.option("-f", "--format", "output_format", type=click.Choice(["png", "jpeg", "webp"]), default="png", help="Output format (default: png)")
+@click.option("-b", "--background", type=click.Choice(["opaque", "transparent"]), default=None, help="Background type (transparent requires png/webp)")
+@click.option("-n", "--count", type=click.IntRange(1, 10), default=1, help="Number of images (default: 1)")
 @requires("OPENAI_API_KEY")
 def generate(prompt, output, reference, size, quality, output_format, background, count):
-    """Generate image from text prompt."""
+    """
+    Generate image from text prompt.
+
+    \b
+    Examples:
+      aitk image generate "a sunset over mountains"
+      aitk image generate "app icon" -o icon.png -b transparent
+      aitk image generate "pixel art sword" -s 1024x1024 -n 3
+      aitk image generate "same style" -r reference.png -o styled.png
+    """
     client = _get_client()
     handles = []
 
@@ -106,16 +115,24 @@ def generate(prompt, output, reference, size, quality, output_format, background
 
 
 @group.command()
-@click.option("-i", "--image", "images", multiple=True, required=True, type=click.Path(exists=True))
+@click.option("-i", "--image", "images", multiple=True, required=True, type=click.Path(exists=True), help="Input image(s) to edit")
 @click.argument("prompt")
-@click.option("-o", "--output", help="Output path")
-@click.option("-s", "--size", type=click.Choice(["1024x1024", "1536x1024", "1024x1536"]), default=None)
-@click.option("-q", "--quality", type=click.Choice(["low", "medium", "high"]), default=None)
-@click.option("-f", "--format", "output_format", type=click.Choice(["png", "jpeg", "webp"]), default="png")
-@click.option("-b", "--background", type=click.Choice(["opaque", "transparent"]), default=None)
+@click.option("-o", "--output", help="Output path (default: overwrites first input)")
+@click.option("-s", "--size", type=click.Choice(["1024x1024", "1536x1024", "1024x1536"]), default=None, help="Output dimensions")
+@click.option("-q", "--quality", type=click.Choice(["low", "medium", "high"]), default=None, help="Generation quality")
+@click.option("-f", "--format", "output_format", type=click.Choice(["png", "jpeg", "webp"]), default="png", help="Output format (default: png)")
+@click.option("-b", "--background", type=click.Choice(["opaque", "transparent"]), default=None, help="Background type")
 @requires("OPENAI_API_KEY")
 def edit(images, prompt, output, size, quality, output_format, background):
-    """Edit image(s) with text prompt."""
+    """
+    Edit image(s) with text prompt.
+
+    \b
+    Examples:
+      aitk image edit -i photo.png "remove the background"
+      aitk image edit -i hero.png "add a glowing aura" -o hero_glow.png
+      aitk image edit -i char.png -i bg.png "place character in scene"
+    """
     client = _get_client()
     handles = []
 
@@ -156,11 +173,22 @@ def edit(images, prompt, output, size, quality, output_format, background):
 
 @group.command()
 @click.argument("input_image", type=click.Path(exists=True))
-@click.option("-o", "--output", help="Output path")
+@click.option("-o", "--output", help="Output path (default: input name with hyphens)")
 @click.option("-s", "--size", type=int, default=128, help="Size in pixels (default: 128)")
-@click.option("--max-kb", type=int, default=256, help="Max file size in KB (default: 256)")
+@click.option("--max-kb", type=int, default=256, help="Max file size in KB (default: 256, Discord limit)")
 def emojify(input_image, output, size, max_kb):
-    """Convert image to Discord emoji format (128x128, <256KB)."""
+    """
+    Convert image to Discord emoji format.
+
+    Resizes to square dimensions and optimizes file size for Discord's
+    emoji requirements (128x128, <256KB by default).
+
+    \b
+    Examples:
+      aitk image emojify icon.png
+      aitk image emojify large_logo.png -s 64 -o small_logo.png
+      aitk image emojify sprite.png --max-kb 128
+    """
     from PIL import Image
 
     input_path = Path(input_image)

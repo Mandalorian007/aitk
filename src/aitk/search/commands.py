@@ -12,7 +12,18 @@ from ..env import requires, get_credential
 @click.argument("query")
 @requires("PERPLEXITY_API_KEY")
 def command(query):
-    """Search the web and return results with sources."""
+    """
+    Search the web using Perplexity AI.
+
+    Returns a summarized answer with source URLs. Good for current events,
+    documentation lookups, and research questions.
+
+    \b
+    Examples:
+      aitk search "latest python 3.13 features"
+      aitk search "how to configure nginx reverse proxy"
+      aitk search "OpenAI Sora API pricing"
+    """
     api_key = get_credential("PERPLEXITY_API_KEY")
 
     try:

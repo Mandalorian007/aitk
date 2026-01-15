@@ -20,10 +20,20 @@ def group():
 
 @group.command()
 @click.argument("url")
-@click.option("--only-main", is_flag=True, help="Extract only main content")
+@click.option("--only-main", is_flag=True, help="Extract only main content (skip nav, footer, sidebars)")
 @requires("FIRECRAWL_API_KEY")
 def page(url, only_main):
-    """Scrape URL and return markdown."""
+    """
+    Scrape a URL and return content as markdown.
+
+    Converts HTML to clean markdown, handling most common page structures.
+    Use --only-main to skip navigation, footers, and sidebars.
+
+    \b
+    Examples:
+      aitk scrape page https://docs.example.com/api
+      aitk scrape page https://blog.example.com/post --only-main
+    """
     client = _get_client()
 
     try:
@@ -53,11 +63,22 @@ def page(url, only_main):
 
 @group.command()
 @click.argument("url")
-@click.option("-s", "--search", help="Filter URLs by search term")
-@click.option("-l", "--limit", default=100, help="Max URLs to return")
+@click.option("-s", "--search", help="Filter URLs by search term (ranked by relevance)")
+@click.option("-l", "--limit", default=100, help="Max URLs to return (default: 100)")
 @requires("FIRECRAWL_API_KEY")
 def map(url, search, limit):
-    """Discover all URLs on a website."""
+    """
+    Discover all URLs on a website.
+
+    Crawls the site and returns a list of URLs. Use --search to filter
+    by relevance to a term. Output is one URL per line.
+
+    \b
+    Examples:
+      aitk scrape map https://docs.example.com
+      aitk scrape map https://example.com --search "authentication"
+      aitk scrape map https://example.com -l 50
+    """
     client = _get_client()
 
     try:

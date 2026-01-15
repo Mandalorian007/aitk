@@ -71,13 +71,25 @@ def group():
 @group.command()
 @click.argument("image", type=click.Path(exists=True))
 @click.argument("prompt")
-@click.option("-o", "--output", help="Output path")
-@click.option("-s", "--seconds", type=click.Choice(["4", "8", "12"]), default="4")
-@click.option("--size", type=click.Choice(["1280x720", "720x1280", "1792x1024", "1024x1792"]), default="1280x720")
-@click.option("--no-wait", is_flag=True, help="Return job ID without waiting")
+@click.option("-o", "--output", help="Output path (default: <image>.mp4)")
+@click.option("-s", "--seconds", type=click.Choice(["4", "8", "12"]), default="4", help="Duration in seconds (default: 4)")
+@click.option("--size", type=click.Choice(["1280x720", "720x1280", "1792x1024", "1024x1792"]), default="1280x720", help="Video resolution (default: 1280x720)")
+@click.option("--no-wait", is_flag=True, help="Return job ID immediately without waiting for completion")
 @requires("OPENAI_API_KEY")
 def create(image, prompt, output, seconds, size, no_wait):
-    """Create video from image. Image becomes first frame."""
+    """
+    Create video from image using OpenAI Sora.
+
+    The image becomes the first frame. The prompt describes what happens next.
+    Generation takes 1-5 minutes depending on duration.
+
+    \b
+    Examples:
+      aitk video create hero.png "walking forward confidently"
+      aitk video create logo.png "logo spins and glows" -s 8 -o intro.mp4
+      aitk video create scene.png "camera pans right" --size 1792x1024
+      aitk video create char.png "waves hello" --no-wait
+    """
     client = _get_client()
     image_path = Path(image)
 
@@ -117,7 +129,20 @@ def create(image, prompt, output, seconds, size, no_wait):
 @click.argument("video_id")
 @requires("OPENAI_API_KEY")
 def status(video_id):
-    """Check video generation status."""
+    """
+    Check video generation status.
+
+    \b
+    Status values:
+      queued      - Waiting to start
+      in_progress - Currently generating (see progress %)
+      completed   - Ready to download
+      failed      - Generation failed
+
+    \b
+    Example:
+      aitk video status video_abc123
+    """
     client = _get_client()
 
     try:
@@ -138,10 +163,18 @@ def status(video_id):
 
 @group.command()
 @click.argument("video_id")
-@click.option("-o", "--output", default="video.mp4")
+@click.option("-o", "--output", default="video.mp4", help="Output path (default: video.mp4)")
 @requires("OPENAI_API_KEY")
 def download(video_id, output):
-    """Download completed video."""
+    """
+    Download completed video.
+
+    Only works when status is 'completed'. Use 'aitk video status' to check.
+
+    \b
+    Example:
+      aitk video download video_abc123 -o animation.mp4
+    """
     client = _get_client()
 
     try:
@@ -163,10 +196,19 @@ def download(video_id, output):
 
 
 @group.command("list")
-@click.option("-n", "--limit", default=10)
+@click.option("-n", "--limit", default=10, help="Number of videos to show (default: 10)")
 @requires("OPENAI_API_KEY")
 def list_videos(limit):
-    """List recent video jobs."""
+    """
+    List recent video generation jobs.
+
+    Shows status icons: [+] completed, [x] failed, [~] in progress, [.] queued
+
+    \b
+    Example:
+      aitk video list
+      aitk video list -n 20
+    """
     client = _get_client()
 
     try:
@@ -187,12 +229,23 @@ def list_videos(limit):
 
 @group.command()
 @click.argument("input_video", type=click.Path(exists=True))
-@click.option("-o", "--output", help="Output path")
-@click.option("--fps", type=int, default=15)
-@click.option("--width", type=int, default=None)
-@click.option("--quality", type=int, default=80)
+@click.option("-o", "--output", help="Output path (default: <input>.webp)")
+@click.option("--fps", type=int, default=15, help="Frames per second (default: 15)")
+@click.option("--width", type=int, default=None, help="Output width in pixels (scales proportionally)")
+@click.option("--quality", type=int, default=80, help="WebP quality 1-100 (default: 80)")
 def webpify(input_video, output, fps, width, quality):
-    """Convert MP4 to animated WebP."""
+    """
+    Convert MP4 video to animated WebP.
+
+    WebP offers better compression than GIF while supporting animation.
+    Useful for Discord stickers, web animations, etc.
+
+    \b
+    Examples:
+      aitk video webpify animation.mp4
+      aitk video webpify clip.mp4 -o sticker.webp --fps 12
+      aitk video webpify large.mp4 --width 480 --quality 60
+    """
     import imageio.v3 as iio
 
     input_path = Path(input_video)
