@@ -8,6 +8,12 @@ Unified CLI for AI-powered development tools.
 uv tool install git+https://github.com/Mandalorian007/aitk
 ```
 
+## Update
+
+```bash
+uv tool upgrade aitk
+```
+
 ## Configure
 
 ```bash
