@@ -81,7 +81,8 @@ def create(image, prompt, output, seconds, size, no_wait):
     Create video from image using OpenAI Sora.
 
     The image becomes the first frame. The prompt describes what happens next.
-    Generation takes 1-5 minutes depending on duration.
+    By default, waits for completion (1-5 min) then downloads the video.
+    Use --no-wait to return job ID immediately for later download.
 
     \b
     Examples:
