@@ -27,7 +27,28 @@ def cli():
 
 @cli.command()
 def config():
-    """Configure API keys."""
+    """
+    Interactive setup for API credentials.
+
+    Prompts for each API key and saves to ~/.config/aitk/config.
+    Press Enter to keep existing values. Keys are stored with 600 permissions.
+
+    \b
+    Keys prompted:
+      OPENAI_API_KEY      Required for: image, video
+      PERPLEXITY_API_KEY  Required for: search
+      FIRECRAWL_API_KEY   Required for: scrape
+
+    \b
+    Alternative: Set environment variables instead of using this command.
+      export OPENAI_API_KEY=sk-...
+      export PERPLEXITY_API_KEY=pplx-...
+      export FIRECRAWL_API_KEY=fc-...
+
+    \b
+    Example:
+      aitk config
+    """
     config_dir = Path.home() / ".config/aitk"
     config_dir.mkdir(parents=True, exist_ok=True)
     config_file = config_dir / "config"
