@@ -5,6 +5,7 @@ from pathlib import Path
 import click
 
 from .env import get_credential
+from .env import cli as env_cli
 from . import image, video, audio, search, scrape, browser
 
 
@@ -21,6 +22,7 @@ def cli():
     aitk search   Web search
     aitk scrape   Web scraping
     aitk browser  Browser automation
+    aitk env      Manage encrypted .env files
     aitk config   Configure credentials
     """
     pass
@@ -86,3 +88,4 @@ cli.add_command(audio.group, name="audio")
 cli.add_command(search.command, name="search")
 cli.add_command(scrape.group, name="scrape")
 cli.add_command(browser.group, name="browser")
+cli.add_command(env_cli.group, name="env")
