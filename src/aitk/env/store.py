@@ -123,11 +123,15 @@ def _gh_api(method: str, endpoint: str, data: dict | None = None) -> dict | list
 
 def _gh_get_file(repo: str, path: str) -> bytes | None:
     """Get file content from GitHub repo."""
-    import base64
-
+    # Use download_url instead of content field to avoid encoding issues
     data = _gh_api("GET", f"/repos/{repo}/contents/{path}")
-    if data and isinstance(data, dict) and "content" in data:
-        return base64.b64decode(data["content"])
+    if data and isinstance(data, dict) and "download_url" in data:
+        result = subprocess.run(
+            ["curl", "-sL", data["download_url"]],
+            capture_output=True,
+        )
+        if result.returncode == 0:
+            return result.stdout
     return None
 
 
