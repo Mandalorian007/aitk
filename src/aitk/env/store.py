@@ -110,7 +110,7 @@ def _gh_api(method: str, endpoint: str, data: dict | None = None) -> dict | list
 
     if result.returncode != 0:
         stderr = result.stderr.decode()
-        if "Not Found" in stderr:
+        if "Not Found" in stderr or "empty" in stderr.lower():
             return None
         raise EnvStoreError(f"GitHub API error: {stderr}")
 
