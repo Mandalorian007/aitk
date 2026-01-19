@@ -37,6 +37,7 @@ export FIRECRAWL_API_KEY=fc-...     # scrape
 | `aitk search` | Web search (Perplexity) |
 | `aitk scrape` | Web scraping (Firecrawl) |
 | `aitk browser` | Browser automation (Playwright) |
+| `aitk env` | Encrypted .env file management (age) |
 
 ## Usage
 
@@ -82,6 +83,38 @@ aitk browser click "#login-button"
 aitk browser type "#email" "user@example.com"
 aitk browser a11y                    # accessibility tree
 aitk browser close
+```
+
+### Env Store
+
+Store age-encrypted .env files in a private GitHub repo. Useful for securely sharing secrets across machines and CI/CD.
+
+**Setup (one-time):**
+
+```bash
+# 1. Install age
+brew install age
+
+# 2. Create private repo for env store
+gh repo create my-env-store --private
+
+# 3. Generate key pair
+aitk env init
+
+# 4. Add output to ~/.config/aitk/config:
+#    ENV_STORE_KEY=AGE-SECRET-KEY-1...
+#    ENV_STORE_PUBLIC_KEY=age1ql3z...
+#    ENV_STORE_REPO=yourname/my-env-store
+```
+
+**Usage:**
+
+```bash
+aitk env push owner/repo      # encrypt & push .env files to store
+aitk env pull owner/repo      # decrypt & pull .env files from store
+aitk env diff owner/repo      # compare local vs store (masked)
+aitk env list                 # list all repos in store
+aitk env list owner/repo      # list .env files for a repo
 ```
 
 ## Help
