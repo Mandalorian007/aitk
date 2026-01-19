@@ -95,8 +95,8 @@ Store age-encrypted .env files in a private GitHub repo. Useful for securely sha
 # 1. Install age
 brew install age
 
-# 2. Create private repo for env store
-gh repo create my-env-store --private
+# 2. Create empty private repo for env store
+gh repo create my-env-store --private  # no --add-readme flag
 
 # 3. Generate key pair
 aitk env init
