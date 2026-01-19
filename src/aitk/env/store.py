@@ -139,14 +139,21 @@ def _gh_put_file(repo: str, path: str, content: bytes, message: str) -> None:
     existing = _gh_api("GET", f"/repos/{repo}/contents/{path}")
     sha = existing.get("sha") if existing and isinstance(existing, dict) else None
 
-    data = {
-        "message": message,
-        "content": base64.b64encode(content).decode(),
-    }
-    if sha:
-        data["sha"] = sha
+    b64_content = base64.b64encode(content).decode()
 
-    _gh_api("PUT", f"/repos/{repo}/contents/{path}", data)
+    # Use -f fields instead of --input to avoid encoding issues
+    cmd = [
+        "gh", "api", "-X", "PUT",
+        f"/repos/{repo}/contents/{path}",
+        "-f", f"message={message}",
+        "-f", f"content={b64_content}",
+    ]
+    if sha:
+        cmd.extend(["-f", f"sha={sha}"])
+
+    result = subprocess.run(cmd, capture_output=True)
+    if result.returncode != 0:
+        raise EnvStoreError(f"GitHub API error: {result.stderr.decode()}")
 
 
 def _gh_list_contents(repo: str, path: str = "") -> list[dict]:
