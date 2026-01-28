@@ -413,3 +413,46 @@ def move(identifier, status, db):
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         sys.exit(1)
+
+
+@group.command()
+@click.argument("identifier")
+@click.option("--db", required=True, help="Database ID")
+@requires("NOTION_API_KEY")
+def delete(identifier, db):
+    """
+    Delete (archive) an item.
+
+    IDENTIFIER: page ID (full or suffix) or title substring.
+
+    \b
+    Examples:
+      aitk notion delete 2f603d27-83ff-8010-9d3b-eee56b8dd35b --db abc123
+      aitk notion delete 6b8dd35b --db abc123
+      aitk notion delete "My Task" --db abc123
+    """
+    try:
+        with httpx.Client(timeout=30.0) as client:
+            page = _find_page(client, db, identifier)
+            if not page:
+                click.echo(f"No item found matching '{identifier}'", err=True)
+                sys.exit(1)
+
+            page_id = page.get("id", "")
+            title = _extract_title(page)
+
+            response = client.patch(
+                f"{NOTION_API_URL}/pages/{page_id}",
+                headers=_get_headers(),
+                json={"archived": True},
+            )
+            response.raise_for_status()
+
+        click.echo(f"Deleted: {page_id}  {title}")
+
+    except httpx.HTTPStatusError as e:
+        click.echo(f"Error: API returned {e.response.status_code}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(1)
