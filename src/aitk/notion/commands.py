@@ -310,8 +310,9 @@ def view(identifier, db):
 @click.argument("title")
 @click.option("--db", required=True, help="Database ID")
 @click.option("-s", "--status", help="Initial status")
+@click.option("-d", "--description", help="Page description/content")
 @requires("NOTION_API_KEY")
-def add(title, db, status):
+def add(title, db, status, description):
     """
     Create a new item.
 
@@ -321,6 +322,7 @@ def add(title, db, status):
     Examples:
       aitk notion add "New task" --db abc123
       aitk notion add "Bug fix" --db abc123 -s "In Progress"
+      aitk notion add "Feature" --db abc123 -d "Detailed description here"
     """
     try:
         with httpx.Client(timeout=30.0) as client:
@@ -341,13 +343,26 @@ def add(title, db, status):
                 if status_prop:
                     properties[status_prop] = {"status": {"name": status}}
 
+            body = {
+                "parent": {"database_id": db},
+                "properties": properties,
+            }
+
+            if description:
+                body["children"] = [
+                    {
+                        "object": "block",
+                        "type": "paragraph",
+                        "paragraph": {
+                            "rich_text": [{"type": "text", "text": {"content": description}}]
+                        }
+                    }
+                ]
+
             response = client.post(
                 f"{NOTION_API_URL}/pages",
                 headers=_get_headers(),
-                json={
-                    "parent": {"database_id": db},
-                    "properties": properties,
-                },
+                json=body,
             )
             response.raise_for_status()
             page = response.json()
@@ -449,6 +464,106 @@ def delete(identifier, db):
             response.raise_for_status()
 
         click.echo(f"Deleted: {page_id}  {title}")
+
+    except httpx.HTTPStatusError as e:
+        click.echo(f"Error: API returned {e.response.status_code}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(1)
+
+
+@group.command()
+@click.argument("identifier")
+@click.option("--db", required=True, help="Database ID")
+@requires("NOTION_API_KEY")
+def comments(identifier, db):
+    """
+    List comments on an item.
+
+    IDENTIFIER: page ID (full or suffix) or title substring.
+
+    \b
+    Examples:
+      aitk notion comments 6b8dd35b --db abc123
+      aitk notion comments "My Task" --db abc123
+    """
+    try:
+        with httpx.Client(timeout=30.0) as client:
+            page = _find_page(client, db, identifier)
+            if not page:
+                click.echo(f"No item found matching '{identifier}'", err=True)
+                sys.exit(1)
+
+            page_id = page.get("id", "")
+            title = _extract_title(page)
+
+            response = client.get(
+                f"{NOTION_API_URL}/comments",
+                headers=_get_headers(),
+                params={"block_id": page_id},
+            )
+            response.raise_for_status()
+            data = response.json()
+
+        click.echo(f"Comments on: {title}\n")
+
+        results = data.get("results", [])
+        if not results:
+            click.echo("No comments.")
+            return
+
+        for comment in results:
+            rich_text = comment.get("rich_text", [])
+            text = "".join(t.get("plain_text", "") for t in rich_text)
+            created = comment.get("created_time", "")[:10]
+            click.echo(f"[{created}] {text}")
+
+    except httpx.HTTPStatusError as e:
+        click.echo(f"Error: API returned {e.response.status_code}", err=True)
+        sys.exit(1)
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(1)
+
+
+@group.command()
+@click.argument("identifier")
+@click.argument("text")
+@click.option("--db", required=True, help="Database ID")
+@requires("NOTION_API_KEY")
+def comment(identifier, text, db):
+    """
+    Add a comment to an item.
+
+    IDENTIFIER: page ID (full or suffix) or title substring.
+
+    \b
+    Examples:
+      aitk notion comment 6b8dd35b "This needs review" --db abc123
+      aitk notion comment "My Task" "Done with first pass" --db abc123
+    """
+    try:
+        with httpx.Client(timeout=30.0) as client:
+            page = _find_page(client, db, identifier)
+            if not page:
+                click.echo(f"No item found matching '{identifier}'", err=True)
+                sys.exit(1)
+
+            page_id = page.get("id", "")
+            title = _extract_title(page)
+
+            response = client.post(
+                f"{NOTION_API_URL}/comments",
+                headers=_get_headers(),
+                json={
+                    "parent": {"page_id": page_id},
+                    "rich_text": [{"type": "text", "text": {"content": text}}],
+                },
+            )
+            response.raise_for_status()
+
+        click.echo(f"Comment added to: {title}")
 
     except httpx.HTTPStatusError as e:
         click.echo(f"Error: API returned {e.response.status_code}", err=True)
