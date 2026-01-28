@@ -96,6 +96,7 @@ aitk notion board --db <id> -s "In progress" # filter by status
 aitk notion add "New task" --db <id>         # create item
 aitk notion view <id> --db <id>              # view item details
 aitk notion move <id> Done --db <id>         # change status
+aitk notion delete <id> --db <id>            # delete (archive) item
 ```
 
 Get your integration token at https://www.notion.com/my-integrations
