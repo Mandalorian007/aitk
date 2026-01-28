@@ -6,7 +6,7 @@ import click
 
 from .env import get_credential
 from .env import cli as env_cli
-from . import image, video, audio, search, scrape, browser
+from . import image, video, audio, search, scrape, browser, notion
 
 
 @click.group()
@@ -22,6 +22,7 @@ def cli():
     aitk search   Web search
     aitk scrape   Web scraping
     aitk browser  Browser automation
+    aitk notion   Notion project boards
     aitk env      Manage encrypted .env files
     aitk config   Configure credentials
     """
@@ -64,6 +65,7 @@ def config():
         ("ELEVENLABS_API_KEY", "audio"),
         ("PERPLEXITY_API_KEY", "search"),
         ("FIRECRAWL_API_KEY", "scrape"),
+        ("NOTION_API_KEY", "notion"),
     ]:
         existing = get_credential(key)
         prompt_text = f"{key} ({tools})"
@@ -88,4 +90,5 @@ cli.add_command(audio.group, name="audio")
 cli.add_command(search.command, name="search")
 cli.add_command(scrape.group, name="scrape")
 cli.add_command(browser.group, name="browser")
+cli.add_command(notion.group, name="notion")
 cli.add_command(env_cli.group, name="env")
