@@ -40,7 +40,7 @@ def page(url, only_main):
         result = client.scrape(
             url,
             formats=["markdown"],
-            only_main_content=only_main if only_main else None,
+            only_main_content=only_main or None,
         )
 
         if hasattr(result, "markdown"):
