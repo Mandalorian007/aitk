@@ -3,6 +3,7 @@
 import asyncio
 import glob
 import json
+import os
 import platform
 import signal
 import socket
@@ -62,7 +63,6 @@ def _kill_port(port: int) -> bool:
     try:
         result = subprocess.run(["lsof", "-ti", f":{port}"], capture_output=True, text=True)
         if result.returncode == 0 and result.stdout.strip():
-            import os
             for pid in result.stdout.strip().split('\n'):
                 try:
                     os.kill(int(pid), signal.SIGTERM)

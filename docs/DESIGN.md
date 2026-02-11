@@ -134,6 +134,8 @@ CREDENTIALS = {
     "OPENAI_API_KEY": "https://platform.openai.com/api-keys",
     "PERPLEXITY_API_KEY": "https://perplexity.ai/settings/api",
     "FIRECRAWL_API_KEY": "https://firecrawl.dev/app/api-keys",
+    "ELEVENLABS_API_KEY": "https://elevenlabs.io/app/settings/api-keys",
+    "NOTION_API_KEY": "https://www.notion.com/my-integrations",
 }
 
 
@@ -199,7 +201,7 @@ dependencies = [
     "pillow>=10.0.0",
     "firecrawl-py>=1.0.0",
     "playwright>=1.40.0",
-    "imageio[ffmpeg]>=2.34.0",
+    "imageio[pyav]>=2.34.0",
 ]
 
 [project.scripts]
