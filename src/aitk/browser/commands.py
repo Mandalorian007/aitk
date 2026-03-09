@@ -131,7 +131,7 @@ async def init():
         click.echo("Playwright: installed")
     else:
         click.echo("Installing Playwright...")
-        result = subprocess.run([sys.executable, "-m", "pip", "install", "playwright"], capture_output=True, text=True)
+        result = subprocess.run(["uv", "pip", "install", "playwright"], capture_output=True, text=True)
         if result.returncode != 0:
             click.echo(f"Error: {result.stderr}", err=True)
             sys.exit(1)

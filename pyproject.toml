@@ -11,7 +11,12 @@ dependencies = [
     "firecrawl-py>=1.0.0",
     "playwright>=1.40.0",
     "imageio[pyav]>=2.34.0",
+    "pyobjc-framework-Quartz>=10.0; sys_platform == 'darwin'",
+    "pyobjc-framework-ApplicationServices>=10.0; sys_platform == 'darwin'",
 ]
+
+[project.optional-dependencies]
+ocr = ["pyobjc-framework-Vision>=10.0; sys_platform == 'darwin'"]
 
 [project.scripts]
 aitk = "aitk:cli"
