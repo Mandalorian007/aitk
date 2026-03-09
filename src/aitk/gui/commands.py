@@ -48,6 +48,10 @@ else:
         Requires macOS with Screen Recording and Accessibility permissions.
 
         \b
+        NOTE: Use single quotes for arguments (e.g., 'text' not "text").
+        Double quotes may cause issues with some CLI tools.
+
+        \b
         RECOMMENDED WORKFLOW (Accessibility-first):
           1. aitk gui a11y APP      Inspect UI element tree
           2. aitk gui find APP X    Find elements by label
@@ -70,7 +74,7 @@ else:
         Quick start:
           aitk gui init             Check permissions
           aitk gui a11y Calculator  Inspect Calculator UI
-          aitk gui press Calc "5"   Press button "5"
+          aitk gui press Calc '5'   Press button '5'
           aitk gui read Calculator  Read display value
         """
         pass
@@ -198,9 +202,12 @@ else:
         """Type a text string.
 
         \b
+        NOTE: Use single quotes for text arguments.
+
+        \b
         Examples:
-          aitk gui type "hello world"
-          aitk gui type "slow typing" --delay 0.1
+          aitk gui type 'hello world'
+          aitk gui type 'slow typing' --delay 0.1
         """
         try:
             keyboard.type_text(text, delay=delay)
@@ -283,9 +290,12 @@ else:
         With argument, sets clipboard to that text.
 
         \b
+        NOTE: Use single quotes for text arguments.
+
+        \b
         Examples:
           aitk gui clipboard
-          aitk gui clipboard "text to copy"
+          aitk gui clipboard 'text to copy'
         """
         try:
             if text is not None:
@@ -345,9 +355,12 @@ else:
         """Bring an application to the foreground.
 
         \b
+        NOTE: Use single quotes for app names with spaces.
+
+        \b
         Examples:
           aitk gui focus Safari
-          aitk gui focus "Visual Studio Code"
+          aitk gui focus 'Visual Studio Code'
         """
         try:
             result = apps.focus_app(app_name)
@@ -469,10 +482,13 @@ else:
         Use to locate buttons, text fields, and other controls.
 
         \b
+        NOTE: Use single quotes for label arguments.
+
+        \b
         Examples:
-          aitk gui find Calculator "Equals"
-          aitk gui find Safari "URL"
-          aitk gui find Notes "New Note"
+          aitk gui find Calculator 'Equals'
+          aitk gui find Safari 'URL'
+          aitk gui find Notes 'New Note'
         """
         try:
             from . import accessibility
@@ -534,9 +550,12 @@ else:
         Useful for waiting on UI state changes.
 
         \b
+        NOTE: Use single quotes for text arguments.
+
+        \b
         Examples:
-          aitk gui wait Calculator "78"
-          aitk gui wait Safari "Page loaded" -t 60
+          aitk gui wait Calculator '78'
+          aitk gui wait Safari 'Page loaded' -t 60
         """
         import time as time_module
 
@@ -580,10 +599,13 @@ else:
         Use 'aitk gui a11y APP' to discover button identifiers.
 
         \b
+        NOTE: Use single quotes for button arguments.
+
+        \b
         Examples:
-          aitk gui press Calculator "Equals"
-          aitk gui press Calculator "Five"
-          aitk gui press Safari "Back"
+          aitk gui press Calculator 'Equals'
+          aitk gui press Calculator 'Five'
+          aitk gui press Safari 'Back'
         """
         try:
             from . import accessibility
