@@ -31,19 +31,22 @@ def group():
 @click.option("--similarity", type=float, default=0.75, help="Clarity + similarity 0-1 (default: 0.75)")
 @click.option("--style", type=float, default=0.0, help="Style exaggeration 0-1 (default: 0)")
 @requires("ELEVENLABS_API_KEY")
-def speak(text, output, voice, model, stability, similarity, style):
+@click.pass_context
+def speak(ctx, text, output, voice, model, stability, similarity, style):
     """
     Convert text to speech.
 
     Uses ElevenLabs API to generate natural-sounding speech from text.
     Run 'aitk audio voices' to see available voices.
 
+    NOTE: Use single quotes for text arguments.
+
     \b
     Examples:
-      aitk audio speak "Hello, world!"
-      aitk audio speak "Welcome to the demo" -o welcome.mp3
-      aitk audio speak "Exciting news!" -v Josh --style 0.5
-      aitk audio speak "Bonjour le monde" -v Antoni --model eleven_multilingual_v2
+      aitk audio speak 'Hello, world!'
+      aitk audio speak 'Welcome to the demo' -o welcome.mp3
+      aitk audio speak 'Exciting news!' -v Josh --style 0.5
+      aitk audio speak 'Bonjour le monde' -v Antoni --model eleven_multilingual_v2
     """
     try:
         voice_id = _resolve_voice(voice)
@@ -74,13 +77,15 @@ def speak(text, output, voice, model, stability, similarity, style):
     except httpx.HTTPStatusError as e:
         _handle_error(e)
     except Exception as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
 
 
 @group.command()
 @requires("ELEVENLABS_API_KEY")
-def voices():
+@click.pass_context
+def voices(ctx):
     """
     List available voices.
 
@@ -126,7 +131,8 @@ def voices():
     except httpx.HTTPStatusError as e:
         _handle_error(e)
     except Exception as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
 
 

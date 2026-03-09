@@ -21,8 +21,9 @@ def group():
 @group.command()
 @click.argument("url")
 @click.option("--only-main", is_flag=True, help="Extract only main content (skip nav, footer, sidebars)")
+@click.pass_context
 @requires("FIRECRAWL_API_KEY")
-def page(url, only_main):
+def page(ctx, url, only_main):
     """
     Scrape a URL and return content as markdown.
 
@@ -53,11 +54,13 @@ def page(url, only_main):
         if markdown:
             click.echo(markdown)
         else:
-            click.echo("Error: No content extracted", err=True)
+            click.echo("Error: No content extracted\n", err=True)
+            click.echo(ctx.get_help())
             sys.exit(1)
 
     except Exception as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
 
 
@@ -65,8 +68,9 @@ def page(url, only_main):
 @click.argument("url")
 @click.option("-s", "--search", help="Filter URLs by search term (ranked by relevance)")
 @click.option("-l", "--limit", default=100, help="Max URLs to return (default: 100)")
+@click.pass_context
 @requires("FIRECRAWL_API_KEY")
-def map(url, search, limit):
+def map(ctx, url, search, limit):
     """
     Discover all URLs on a website.
 
@@ -98,7 +102,8 @@ def map(url, search, limit):
             links = []
 
         if not links:
-            click.echo("No URLs found", err=True)
+            click.echo("No URLs found\n", err=True)
+            click.echo(ctx.get_help())
             sys.exit(1)
 
         for link in links:
@@ -110,5 +115,6 @@ def map(url, search, limit):
                 click.echo(str(link))
 
     except Exception as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)

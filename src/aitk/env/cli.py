@@ -37,7 +37,8 @@ def group():
 
 
 @group.command()
-def init():
+@click.pass_context
+def init(ctx):
     """
     Generate age key pair for encryption.
 
@@ -62,13 +63,15 @@ def init():
         click.echo("ENV_STORE_REPO=owner/env-store")
 
     except store.EnvStoreError as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
 
 
 @group.command()
 @click.argument("repo")
-def push(repo):
+@click.pass_context
+def push(ctx, repo):
     """
     Encrypt and push .env files to store.
 
@@ -91,13 +94,15 @@ def push(repo):
         click.echo(f"\nStored {len(pushed)} file(s) to {repo}")
 
     except store.EnvStoreError as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
 
 
 @group.command()
 @click.argument("repo")
-def pull(repo):
+@click.pass_context
+def pull(ctx, repo):
     """
     Decrypt and pull .env files from store.
 
@@ -120,14 +125,16 @@ def pull(repo):
         click.echo(f"\nPulled {len(created)} file(s) from {repo}")
 
     except store.EnvStoreError as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
 
 
 @group.command()
 @click.argument("repo")
 @click.option("--reveal", is_flag=True, help="Show actual values instead of masked")
-def diff(repo, reveal):
+@click.pass_context
+def diff(ctx, repo, reveal):
     """
     Compare local .env keys with store.
 
@@ -164,13 +171,15 @@ def diff(repo, reveal):
             click.echo("No .env keys found")
 
     except store.EnvStoreError as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
 
 
 @group.command("list")
 @click.argument("repo", required=False)
-def list_cmd(repo):
+@click.pass_context
+def list_cmd(ctx, repo):
     """
     List repos or files in env store.
 
@@ -199,5 +208,6 @@ def list_cmd(repo):
                 click.echo("No repos in env store")
 
     except store.EnvStoreError as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)

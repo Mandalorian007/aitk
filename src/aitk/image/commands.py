@@ -36,16 +36,19 @@ def group():
 @click.option("-b", "--background", type=click.Choice(["opaque", "transparent"]), default=None, help="Background type (transparent requires png/webp)")
 @click.option("-n", "--count", type=click.IntRange(1, 10), default=1, help="Number of images (default: 1)")
 @requires("OPENAI_API_KEY")
-def generate(prompt, output, reference, size, quality, output_format, background, count):
+@click.pass_context
+def generate(ctx, prompt, output, reference, size, quality, output_format, background, count):
     """
     Generate image from text prompt.
 
+    NOTE: Use single quotes for text arguments.
+
     \b
     Examples:
-      aitk image generate "a sunset over mountains"
-      aitk image generate "app icon" -o icon.png -b transparent
-      aitk image generate "pixel art sword" -s 1024x1024 -n 3
-      aitk image generate "same style" -r reference.png -o styled.png
+      aitk image generate 'a sunset over mountains'
+      aitk image generate 'app icon' -o icon.png -b transparent
+      aitk image generate 'pixel art sword' -s 1024x1024 -n 3
+      aitk image generate 'same style' -r reference.png -o styled.png
     """
     client = _get_client()
     handles = []
@@ -103,11 +106,12 @@ def generate(prompt, output, reference, size, quality, output_format, background
     except Exception as e:
         msg = str(e).lower()
         if "rate_limit" in msg:
-            click.echo("Error: Rate limit exceeded", err=True)
+            click.echo("Error: Rate limit exceeded\n", err=True)
         elif "content_policy" in msg:
-            click.echo("Error: Content policy violation", err=True)
+            click.echo("Error: Content policy violation\n", err=True)
         else:
-            click.echo(f"Error: {e}", err=True)
+            click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
     finally:
         for h in handles:
@@ -123,15 +127,18 @@ def generate(prompt, output, reference, size, quality, output_format, background
 @click.option("-f", "--format", "output_format", type=click.Choice(["png", "jpeg", "webp"]), default="png", help="Output format (default: png)")
 @click.option("-b", "--background", type=click.Choice(["opaque", "transparent"]), default=None, help="Background type")
 @requires("OPENAI_API_KEY")
-def edit(images, prompt, output, size, quality, output_format, background):
+@click.pass_context
+def edit(ctx, images, prompt, output, size, quality, output_format, background):
     """
     Edit image(s) with text prompt.
 
+    NOTE: Use single quotes for text arguments.
+
     \b
     Examples:
-      aitk image edit -i photo.png "remove the background"
-      aitk image edit -i hero.png "add a glowing aura" -o hero_glow.png
-      aitk image edit -i char.png -i bg.png "place character in scene"
+      aitk image edit -i photo.png 'remove the background'
+      aitk image edit -i hero.png 'add a glowing aura' -o hero_glow.png
+      aitk image edit -i char.png -i bg.png 'place character in scene'
     """
     client = _get_client()
     handles = []
@@ -164,7 +171,8 @@ def edit(images, prompt, output, size, quality, output_format, background):
         click.echo(f"Saved: {output_path}")
 
     except Exception as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
     finally:
         for h in handles:
@@ -176,7 +184,8 @@ def edit(images, prompt, output, size, quality, output_format, background):
 @click.option("-o", "--output", help="Output path (default: input name with hyphens)")
 @click.option("-s", "--size", type=int, default=128, help="Size in pixels (default: 128)")
 @click.option("--max-kb", type=int, default=256, help="Max file size in KB (default: 256, Discord limit)")
-def emojify(input_image, output, size, max_kb):
+@click.pass_context
+def emojify(ctx, input_image, output, size, max_kb):
     """
     Convert image to Discord emoji format.
 
@@ -225,5 +234,6 @@ def emojify(input_image, output, size, max_kb):
             click.echo(f"Saved: {output_path} ({size}x{size}, {kb:.1f}KB)")
 
     except Exception as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)

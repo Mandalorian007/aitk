@@ -76,7 +76,8 @@ def group():
 @click.option("--size", type=click.Choice(["1280x720", "720x1280", "1792x1024", "1024x1792"]), default="1280x720", help="Video resolution (default: 1280x720)")
 @click.option("--no-wait", is_flag=True, help="Return job ID immediately without waiting for completion")
 @requires("OPENAI_API_KEY")
-def create(image, prompt, output, seconds, size, no_wait):
+@click.pass_context
+def create(ctx, image, prompt, output, seconds, size, no_wait):
     """
     Create video from image using OpenAI Sora.
 
@@ -84,12 +85,14 @@ def create(image, prompt, output, seconds, size, no_wait):
     By default, waits for completion (1-5 min) then downloads the video.
     Use --no-wait to return job ID immediately for later download.
 
+    NOTE: Use single quotes for text arguments.
+
     \b
     Examples:
-      aitk video create hero.png "walking forward confidently"
-      aitk video create logo.png "logo spins and glows" -s 8 -o intro.mp4
-      aitk video create scene.png "camera pans right" --size 1792x1024
-      aitk video create char.png "waves hello" --no-wait
+      aitk video create hero.png 'walking forward confidently'
+      aitk video create logo.png 'logo spins and glows' -s 8 -o intro.mp4
+      aitk video create scene.png 'camera pans right' --size 1792x1024
+      aitk video create char.png 'waves hello' --no-wait
     """
     client = _get_client()
     image_path = Path(image)
@@ -122,14 +125,16 @@ def create(image, prompt, output, seconds, size, no_wait):
         click.echo(f"Saved: {output_path}")
 
     except Exception as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
 
 
 @group.command()
 @click.argument("video_id")
 @requires("OPENAI_API_KEY")
-def status(video_id):
+@click.pass_context
+def status(ctx, video_id):
     """
     Check video generation status.
 
@@ -158,7 +163,8 @@ def status(video_id):
                 click.echo(f"Error: {getattr(error, 'message', 'Unknown')}", err=True)
 
     except Exception as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
 
 
@@ -166,7 +172,8 @@ def status(video_id):
 @click.argument("video_id")
 @click.option("-o", "--output", default="video.mp4", help="Output path (default: video.mp4)")
 @requires("OPENAI_API_KEY")
-def download(video_id, output):
+@click.pass_context
+def download(ctx, video_id, output):
     """
     Download completed video.
 
@@ -192,14 +199,16 @@ def download(video_id, output):
         click.echo(f"Saved: {output_path}")
 
     except Exception as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
 
 
 @group.command("list")
 @click.option("-n", "--limit", default=10, help="Number of videos to show (default: 10)")
 @requires("OPENAI_API_KEY")
-def list_videos(limit):
+@click.pass_context
+def list_videos(ctx, limit):
     """
     List recent video generation jobs.
 
@@ -224,7 +233,8 @@ def list_videos(limit):
             click.echo(f"[{icon}] {video.id} {video.status}{progress}")
 
     except Exception as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
 
 
@@ -234,7 +244,8 @@ def list_videos(limit):
 @click.option("--fps", type=int, default=15, help="Frames per second (default: 15)")
 @click.option("--width", type=int, default=None, help="Output width in pixels (scales proportionally)")
 @click.option("--quality", type=int, default=80, help="WebP quality 1-100 (default: 80)")
-def webpify(input_video, output, fps, width, quality):
+@click.pass_context
+def webpify(ctx, input_video, output, fps, width, quality):
     """
     Convert MP4 video to animated WebP.
 
@@ -284,5 +295,6 @@ def webpify(input_video, output, fps, width, quality):
         click.echo(f"Saved: {output_path} ({len(pil_frames)} frames, {w}x{h}, {kb:.1f}KB)")
 
     except Exception as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
