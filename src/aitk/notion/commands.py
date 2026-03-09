@@ -120,8 +120,9 @@ def group():
 
 
 @group.command()
+@click.pass_context
 @requires("NOTION_API_KEY")
-def dbs():
+def dbs(ctx):
     """
     List accessible databases.
 
@@ -153,10 +154,12 @@ def dbs():
             click.echo(f"{db_id}  {title}")
 
     except httpx.HTTPStatusError as e:
-        click.echo(f"Error: API returned {e.response.status_code}", err=True)
+        click.echo(f"Error: API returned {e.response.status_code}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
     except Exception as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
 
 
@@ -164,15 +167,18 @@ def dbs():
 @click.option("--db", required=True, help="Database ID")
 @click.option("-s", "--status", help="Filter by status")
 @click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+@click.pass_context
 @requires("NOTION_API_KEY")
-def board(db, status, as_json):
+def board(ctx, db, status, as_json):
     """
     List items in a database.
+
+    NOTE: Use single quotes for text arguments.
 
     \b
     Examples:
       aitk notion board --db abc123
-      aitk notion board --db abc123 -s "In Progress"
+      aitk notion board --db abc123 -s 'In Progress'
       aitk notion board --db abc123 --json
     """
     try:
@@ -220,28 +226,33 @@ def board(db, status, as_json):
                 click.echo(f"{page_id}  {status_str:15}  {title}")
 
     except httpx.HTTPStatusError as e:
-        click.echo(f"Error: API returned {e.response.status_code}", err=True)
+        click.echo(f"Error: API returned {e.response.status_code}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
     except Exception as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
 
 
 @group.command()
 @click.argument("identifier")
 @click.option("--db", required=True, help="Database ID")
+@click.pass_context
 @requires("NOTION_API_KEY")
-def view(identifier, db):
+def view(ctx, identifier, db):
     """
     View item details.
 
     IDENTIFIER: page ID (full or suffix) or title substring.
 
+    NOTE: Use single quotes for text arguments.
+
     \b
     Examples:
       aitk notion view 2f603d27-83ff-8010-9d3b-eee56b8dd35b --db abc123
       aitk notion view 6b8dd35b --db abc123
-      aitk notion view "My Task" --db abc123
+      aitk notion view 'My Task' --db abc123
     """
     try:
         with httpx.Client(timeout=30.0) as client:
@@ -299,10 +310,12 @@ def view(identifier, db):
                 click.echo(f"  {name}: {value}")
 
     except httpx.HTTPStatusError as e:
-        click.echo(f"Error: API returned {e.response.status_code}", err=True)
+        click.echo(f"Error: API returned {e.response.status_code}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
     except Exception as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
 
 
@@ -311,18 +324,21 @@ def view(identifier, db):
 @click.option("--db", required=True, help="Database ID")
 @click.option("-s", "--status", help="Initial status")
 @click.option("-d", "--description", help="Page description/content")
+@click.pass_context
 @requires("NOTION_API_KEY")
-def add(title, db, status, description):
+def add(ctx, title, db, status, description):
     """
     Create a new item.
 
     Creates a page in the database with the given title and optional status.
 
+    NOTE: Use single quotes for text arguments.
+
     \b
     Examples:
-      aitk notion add "New task" --db abc123
-      aitk notion add "Bug fix" --db abc123 -s "In Progress"
-      aitk notion add "Feature" --db abc123 -d "Detailed description here"
+      aitk notion add 'New task' --db abc123
+      aitk notion add 'Bug fix' --db abc123 -s 'In Progress'
+      aitk notion add 'Feature' --db abc123 -d 'Detailed description here'
     """
     try:
         with httpx.Client(timeout=30.0) as client:
@@ -372,10 +388,12 @@ def add(title, db, status, description):
         click.echo(f"URL: {page.get('url', '')}")
 
     except httpx.HTTPStatusError as e:
-        click.echo(f"Error: API returned {e.response.status_code}", err=True)
+        click.echo(f"Error: API returned {e.response.status_code}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
     except Exception as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
 
 
@@ -383,18 +401,21 @@ def add(title, db, status, description):
 @click.argument("identifier")
 @click.argument("status")
 @click.option("--db", required=True, help="Database ID")
+@click.pass_context
 @requires("NOTION_API_KEY")
-def move(identifier, status, db):
+def move(ctx, identifier, status, db):
     """
     Change item status.
 
     IDENTIFIER: page ID (full or suffix) or title substring.
 
+    NOTE: Use single quotes for text arguments.
+
     \b
     Examples:
       aitk notion move 2f603d27-83ff-8010-9d3b-eee56b8dd35b Done --db abc123
       aitk notion move 6b8dd35b Done --db abc123
-      aitk notion move "My Task" "In Progress" --db abc123
+      aitk notion move 'My Task' 'In Progress' --db abc123
     """
     try:
         with httpx.Client(timeout=30.0) as client:
@@ -423,28 +444,33 @@ def move(identifier, status, db):
         click.echo(f"Moved: {page_id}  {_extract_title(page)} → {status}")
 
     except httpx.HTTPStatusError as e:
-        click.echo(f"Error: API returned {e.response.status_code}", err=True)
+        click.echo(f"Error: API returned {e.response.status_code}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
     except Exception as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
 
 
 @group.command()
 @click.argument("identifier")
 @click.option("--db", required=True, help="Database ID")
+@click.pass_context
 @requires("NOTION_API_KEY")
-def delete(identifier, db):
+def delete(ctx, identifier, db):
     """
     Delete (archive) an item.
 
     IDENTIFIER: page ID (full or suffix) or title substring.
 
+    NOTE: Use single quotes for text arguments.
+
     \b
     Examples:
       aitk notion delete 2f603d27-83ff-8010-9d3b-eee56b8dd35b --db abc123
       aitk notion delete 6b8dd35b --db abc123
-      aitk notion delete "My Task" --db abc123
+      aitk notion delete 'My Task' --db abc123
     """
     try:
         with httpx.Client(timeout=30.0) as client:
@@ -466,27 +492,32 @@ def delete(identifier, db):
         click.echo(f"Deleted: {page_id}  {title}")
 
     except httpx.HTTPStatusError as e:
-        click.echo(f"Error: API returned {e.response.status_code}", err=True)
+        click.echo(f"Error: API returned {e.response.status_code}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
     except Exception as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
 
 
 @group.command()
 @click.argument("identifier")
 @click.option("--db", required=True, help="Database ID")
+@click.pass_context
 @requires("NOTION_API_KEY")
-def comments(identifier, db):
+def comments(ctx, identifier, db):
     """
     List comments on an item.
 
     IDENTIFIER: page ID (full or suffix) or title substring.
 
+    NOTE: Use single quotes for text arguments.
+
     \b
     Examples:
       aitk notion comments 6b8dd35b --db abc123
-      aitk notion comments "My Task" --db abc123
+      aitk notion comments 'My Task' --db abc123
     """
     try:
         with httpx.Client(timeout=30.0) as client:
@@ -520,10 +551,12 @@ def comments(identifier, db):
             click.echo(f"[{created}] {text}")
 
     except httpx.HTTPStatusError as e:
-        click.echo(f"Error: API returned {e.response.status_code}", err=True)
+        click.echo(f"Error: API returned {e.response.status_code}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
     except Exception as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
 
 
@@ -531,17 +564,20 @@ def comments(identifier, db):
 @click.argument("identifier")
 @click.argument("text")
 @click.option("--db", required=True, help="Database ID")
+@click.pass_context
 @requires("NOTION_API_KEY")
-def comment(identifier, text, db):
+def comment(ctx, identifier, text, db):
     """
     Add a comment to an item.
 
     IDENTIFIER: page ID (full or suffix) or title substring.
 
+    NOTE: Use single quotes for text arguments.
+
     \b
     Examples:
-      aitk notion comment 6b8dd35b "This needs review" --db abc123
-      aitk notion comment "My Task" "Done with first pass" --db abc123
+      aitk notion comment 6b8dd35b 'This needs review' --db abc123
+      aitk notion comment 'My Task' 'Done with first pass' --db abc123
     """
     try:
         with httpx.Client(timeout=30.0) as client:
@@ -566,8 +602,10 @@ def comment(identifier, text, db):
         click.echo(f"Comment added to: {title}")
 
     except httpx.HTTPStatusError as e:
-        click.echo(f"Error: API returned {e.response.status_code}", err=True)
+        click.echo(f"Error: API returned {e.response.status_code}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
     except Exception as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)

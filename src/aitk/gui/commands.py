@@ -34,9 +34,11 @@ else:
     # Import macOS modules
     from . import screen, mouse, keyboard, apps, clipboard
 
-    def _error_exit(msg: str, code: int = 1) -> None:
-        """Print error and exit."""
-        click.echo(f"Error: {msg}", err=True)
+    def _error_exit(msg: str, code: int = 1, ctx: click.Context | None = None) -> None:
+        """Print error and exit, optionally showing help."""
+        click.echo(f"Error: {msg}\n", err=True)
+        if ctx:
+            click.echo(ctx.get_help())
         sys.exit(code)
 
     @click.group()
@@ -143,7 +145,8 @@ else:
     @group.command("see")
     @click.option("-o", "--output", type=click.Path(), help="Output path (default: /tmp/gui-<timestamp>.png)")
     @click.option("--display", type=int, help="Display index to capture (0-indexed)")
-    def see_cmd(output, display):
+    @click.pass_context
+    def see_cmd(ctx, output, display):
         """Screenshot screen or specific display.
 
         \b
@@ -161,18 +164,19 @@ else:
             result = screen.capture_screen(path, display_index=display)
             click.echo(f"Saved: {result}")
         except PermissionDeniedError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
         except ValueError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
         except GuiError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
 
     @group.command("click")
     @click.argument("x", type=int)
     @click.argument("y", type=int)
     @click.option("--right", is_flag=True, help="Right-click instead of left")
     @click.option("--double", is_flag=True, help="Double-click")
-    def click_cmd(x, y, right, double):
+    @click.pass_context
+    def click_cmd(ctx, x, y, right, double):
         """Click at screen coordinates (fallback).
 
         Prefer 'press' command for buttons when accessibility is available.
@@ -193,12 +197,13 @@ else:
             mouse.click(x, y, button=button, clicks=clicks)
             click.echo(f"Clicked: ({x}, {y})")
         except GuiError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
 
     @group.command("type")
     @click.argument("text")
     @click.option("--delay", type=float, default=0.02, help="Delay between keystrokes (seconds)")
-    def type_cmd(text, delay):
+    @click.pass_context
+    def type_cmd(ctx, text, delay):
         """Type a text string.
 
         \b
@@ -213,11 +218,12 @@ else:
             keyboard.type_text(text, delay=delay)
             click.echo(f"Typed: {text}")
         except GuiError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
 
     @group.command("hotkey")
     @click.argument("combo")
-    def hotkey_cmd(combo):
+    @click.pass_context
+    def hotkey_cmd(ctx, combo):
         """Execute a key combination.
 
         Use + to combine keys. Modifiers: cmd, ctrl, shift, option/alt.
@@ -233,13 +239,14 @@ else:
             keyboard.hotkey(combo)
             click.echo(f"Pressed: {combo}")
         except ValueError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
         except GuiError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
 
     @group.command("apps")
     @click.option("--json", "as_json", is_flag=True, help="Output as JSON")
-    def apps_cmd(as_json):
+    @click.pass_context
+    def apps_cmd(ctx, as_json):
         """List running applications.
 
         \b
@@ -257,11 +264,12 @@ else:
                     marker = "*" if app["is_active"] else " "
                     click.echo(f"{marker} {app['name']} (pid: {app['pid']})")
         except GuiError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
 
     @group.command("screens")
     @click.option("--json", "as_json", is_flag=True, help="Output as JSON")
-    def screens_cmd(as_json):
+    @click.pass_context
+    def screens_cmd(ctx, as_json):
         """List monitors with geometry.
 
         \b
@@ -279,11 +287,12 @@ else:
                     main = " (main)" if d["is_main"] else ""
                     click.echo(f"Display {d['index']}{main}: {d['width']}x{d['height']} at ({d['x']}, {d['y']})")
         except GuiError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
 
     @group.command("clipboard")
     @click.argument("text", required=False)
-    def clipboard_cmd(text):
+    @click.pass_context
+    def clipboard_cmd(ctx, text):
         """Get or set clipboard text.
 
         Without argument, prints current clipboard.
@@ -308,14 +317,15 @@ else:
                 else:
                     click.echo("(clipboard empty or not text)")
         except GuiError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
 
     # Phase 2 commands
 
     @group.command("scroll")
     @click.argument("direction", type=click.Choice(["up", "down", "left", "right"]))
     @click.option("--amount", type=int, default=3, help="Scroll amount (default: 3)")
-    def scroll_cmd(direction, amount):
+    @click.pass_context
+    def scroll_cmd(ctx, direction, amount):
         """Scroll in a direction.
 
         \b
@@ -327,7 +337,7 @@ else:
             mouse.scroll(direction, amount=amount)
             click.echo(f"Scrolled: {direction} ({amount})")
         except GuiError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
 
     @group.command("drag")
     @click.argument("x1", type=int)
@@ -335,7 +345,8 @@ else:
     @click.argument("x2", type=int)
     @click.argument("y2", type=int)
     @click.option("--duration", type=float, default=0.5, help="Drag duration in seconds")
-    def drag_cmd(x1, y1, x2, y2, duration):
+    @click.pass_context
+    def drag_cmd(ctx, x1, y1, x2, y2, duration):
         """Drag from one point to another.
 
         \b
@@ -347,11 +358,12 @@ else:
             mouse.drag(x1, y1, x2, y2, duration=duration)
             click.echo(f"Dragged: ({x1}, {y1}) -> ({x2}, {y2})")
         except GuiError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
 
     @group.command("focus")
     @click.argument("app_name")
-    def focus_cmd(app_name):
+    @click.pass_context
+    def focus_cmd(ctx, app_name):
         """Bring an application to the foreground.
 
         \b
@@ -366,14 +378,15 @@ else:
             result = apps.focus_app(app_name)
             click.echo(f"Focused: {result['name']}")
         except AppNotFoundError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
         except GuiError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
 
     @group.command("window")
     @click.argument("app_name")
     @click.option("--json", "as_json", is_flag=True, help="Output as JSON")
-    def window_cmd(app_name, as_json):
+    @click.pass_context
+    def window_cmd(ctx, app_name, as_json):
         """Get window bounds and info for an application.
 
         \b
@@ -391,9 +404,9 @@ else:
                 click.echo(f"  Position: ({info['x']}, {info['y']})")
                 click.echo(f"  Size: {info['width']}x{info['height']}")
         except (AppNotFoundError, WindowNotFoundError) as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
         except GuiError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
 
     # OCR (fallback when accessibility not available)
 
@@ -401,7 +414,8 @@ else:
     @click.option("--path", type=click.Path(exists=True), help="Image file to OCR (default: capture screen)")
     @click.option("--display", type=int, help="Display index to capture (if no --path)")
     @click.option("--json", "as_json", is_flag=True, help="Output as JSON with coordinates")
-    def ocr_cmd(path, display, as_json):
+    @click.pass_context
+    def ocr_cmd(ctx, path, display, as_json):
         """Extract text from screen or image file (fallback).
 
         NOTE: Prefer accessibility commands (a11y, find, read) when possible.
@@ -431,20 +445,21 @@ else:
                 for r in results:
                     click.echo(f"{r['text']}")
         except FileNotFoundError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
         except PermissionDeniedError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
         except GuiError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
         except Exception as e:
-            _error_exit(f"OCR failed: {e}")
+            _error_exit(f"OCR failed: {e}", ctx=ctx)
 
     # Accessibility (preferred approach)
 
     @group.command("a11y")
     @click.argument("app_name")
     @click.option("--depth", type=int, default=10, help="Maximum tree depth (default: 10)")
-    def a11y_cmd(app_name, depth):
+    @click.pass_context
+    def a11y_cmd(ctx, app_name, depth):
         """Dump accessibility tree for an application (preferred).
 
         Start here to understand an app's UI structure. Shows element
@@ -465,17 +480,18 @@ else:
             tree = accessibility.get_app_accessibility_tree(app_name, max_depth=depth)
             click.echo(json.dumps(tree, indent=2))
         except PermissionDeniedError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
         except AppNotFoundError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
         except GuiError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
 
     @group.command("find")
     @click.argument("app_name")
     @click.argument("label")
     @click.option("--max", "max_results", type=int, default=10, help="Maximum results (default: 10)")
-    def find_cmd(app_name, label, max_results):
+    @click.pass_context
+    def find_cmd(ctx, app_name, label, max_results):
         """Find UI elements by label/title/value (preferred).
 
         Searches the accessibility tree for elements matching the label.
@@ -500,17 +516,18 @@ else:
             else:
                 click.echo(json.dumps(results, indent=2))
         except PermissionDeniedError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
         except AppNotFoundError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
         except GuiError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
 
     @group.command("read")
     @click.argument("app_name")
     @click.option("--role", help="Element role to match (e.g., AXStaticText)")
     @click.option("--title", help="Element title to match")
-    def read_cmd(app_name, role, title):
+    @click.pass_context
+    def read_cmd(ctx, app_name, role, title):
         """Read value from a UI element (preferred).
 
         Returns the value/text of the first matching element.
@@ -532,18 +549,19 @@ else:
             else:
                 click.echo("(no value found)")
         except PermissionDeniedError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
         except AppNotFoundError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
         except GuiError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
 
     @group.command("wait")
     @click.argument("app_name")
     @click.argument("text")
     @click.option("-t", "--timeout", type=float, default=30, help="Timeout in seconds (default: 30)")
     @click.option("-i", "--interval", type=float, default=0.5, help="Poll interval (default: 0.5)")
-    def wait_cmd(app_name, text, timeout, interval):
+    @click.pass_context
+    def wait_cmd(ctx, app_name, text, timeout, interval):
         """Wait for text to appear in an application.
 
         Polls the accessibility tree until the text is found or timeout.
@@ -578,18 +596,19 @@ else:
 
                 time_module.sleep(interval)
 
-            _error_exit(f"Timeout waiting for: {text}")
+            _error_exit(f"Timeout waiting for: {text}", ctx=ctx)
         except PermissionDeniedError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
         except AppNotFoundError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
         except GuiError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
 
     @group.command("press")
     @click.argument("app_name")
     @click.argument("button")
-    def press_cmd(app_name, button):
+    @click.pass_context
+    def press_cmd(ctx, app_name, button):
         """Press a button by identifier (preferred over click).
 
         Finds a button by identifier/description/title and triggers it
@@ -613,8 +632,8 @@ else:
             accessibility.press_button(app_name, button)
             click.echo(f"Pressed: {button}")
         except PermissionDeniedError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
         except AppNotFoundError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)
         except GuiError as e:
-            _error_exit(str(e))
+            _error_exit(str(e), ctx=ctx)

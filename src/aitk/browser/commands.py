@@ -213,15 +213,18 @@ async def start(port, headed):
 @click.argument("url")
 @click.option("--port", type=int, default=DEFAULT_PORT, help="CDP port (default: 9222)")
 @click.option("--new", is_flag=True, help="Open in new tab instead of current")
+@click.pass_context
 @_run_async
-async def nav(url, port, new):
+async def nav(ctx, url, port, new):
     """
     Navigate to a URL.
 
+    NOTE: Use single quotes for URL arguments.
+
     \b
     Examples:
-      aitk browser nav "https://example.com"
-      aitk browser nav "https://google.com" --new
+      aitk browser nav 'https://example.com'
+      aitk browser nav 'https://google.com' --new
     """
     try:
         pw, browser = await _connect(port)
@@ -236,8 +239,8 @@ async def nav(url, port, new):
             await browser.close()
             await pw.stop()
     except RuntimeError as e:
-        click.echo(f"Error: {e}", err=True)
-        click.echo(f"Run: aitk browser start --port {port}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
 
 
@@ -245,8 +248,9 @@ async def nav(url, port, new):
 @click.option("--path", type=click.Path(), help="Output path (default: /tmp/screenshot-<timestamp>.png)")
 @click.option("--full", is_flag=True, help="Capture full scrollable page")
 @click.option("--port", type=int, default=DEFAULT_PORT, help="CDP port (default: 9222)")
+@click.pass_context
 @_run_async
-async def screenshot(path, full, port):
+async def screenshot(ctx, path, full, port):
     """
     Take screenshot of current page.
 
@@ -270,23 +274,27 @@ async def screenshot(path, full, port):
             await browser.close()
             await pw.stop()
     except RuntimeError as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
 
 
 @group.command("click")
 @click.argument("selector")
 @click.option("--port", type=int, default=DEFAULT_PORT, help="CDP port (default: 9222)")
+@click.pass_context
 @_run_async
-async def click_cmd(selector, port):
+async def click_cmd(ctx, selector, port):
     """
     Click an element by CSS selector.
 
+    NOTE: Use single quotes for selector arguments.
+
     \b
     Examples:
-      aitk browser click "#submit-button"
-      aitk browser click "button[type=submit]"
-      aitk browser click ".login-link"
+      aitk browser click '#submit-button'
+      aitk browser click 'button[type=submit]'
+      aitk browser click '.login-link'
     """
     try:
         pw, browser = await _connect(port)
@@ -298,7 +306,8 @@ async def click_cmd(selector, port):
             await browser.close()
             await pw.stop()
     except Exception as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
 
 
@@ -306,18 +315,21 @@ async def click_cmd(selector, port):
 @click.argument("selector")
 @click.argument("text")
 @click.option("--port", type=int, default=DEFAULT_PORT, help="CDP port (default: 9222)")
+@click.pass_context
 @_run_async
-async def type_cmd(selector, text, port):
+async def type_cmd(ctx, selector, text, port):
     """
     Type text into an input field by CSS selector.
 
     Clears existing content before typing.
 
+    NOTE: Use single quotes for selector and text arguments.
+
     \b
     Examples:
-      aitk browser type "#email" "user@example.com"
-      aitk browser type "input[name=password]" "secret123"
-      aitk browser type ".search-box" "search query"
+      aitk browser type '#email' 'user@example.com'
+      aitk browser type 'input[name=password]' 'secret123'
+      aitk browser type '.search-box' 'search query'
     """
     try:
         pw, browser = await _connect(port)
@@ -329,14 +341,16 @@ async def type_cmd(selector, text, port):
             await browser.close()
             await pw.stop()
     except Exception as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
 
 
 @group.command()
 @click.option("--port", type=int, default=DEFAULT_PORT, help="CDP port (default: 9222)")
+@click.pass_context
 @_run_async
-async def a11y(port):
+async def a11y(ctx, port):
     """
     Get accessibility tree snapshot as JSON.
 
@@ -363,7 +377,8 @@ async def a11y(port):
             await browser.close()
             await pw.stop()
     except Exception as e:
-        click.echo(f"Error: {e}", err=True)
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
         sys.exit(1)
 
 
@@ -435,8 +450,9 @@ def _build_a11y_tree(nodes: list) -> dict | None:
 
 @group.command()
 @click.option("--port", type=int, default=DEFAULT_PORT, help="CDP port (default: 9222)")
+@click.pass_context
 @_run_async
-async def status(port):
+async def status(ctx, port):
     """
     Check if browser is running and show current state.
 
@@ -455,14 +471,17 @@ async def status(port):
         finally:
             await browser.close()
             await pw.stop()
-    except Exception:
-        click.echo(f"Not running on port {port}")
+    except Exception as e:
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
+        sys.exit(1)
 
 
 @group.command()
 @click.option("--port", type=int, default=DEFAULT_PORT, help="CDP port (default: 9222)")
+@click.pass_context
 @_run_async
-async def close(port):
+async def close(ctx, port):
     """
     Close browser and terminate the process.
 
@@ -475,8 +494,10 @@ async def close(port):
         pw, browser = await _connect(port)
         await browser.close()
         await pw.stop()
-    except Exception:
-        pass
+    except Exception as e:
+        click.echo(f"Error: {e}\n", err=True)
+        click.echo(ctx.get_help())
+        sys.exit(1)
 
     if _kill_port(port):
         click.echo(f"Closed: port {port}")
