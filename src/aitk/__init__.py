@@ -6,7 +6,7 @@ import click
 
 from .env import get_credential
 from .env import cli as env_cli
-from . import image, video, audio, search, scrape, browser, notion
+from . import image, video, audio, search, scrape, browser, notion, mux
 
 
 @click.group()
@@ -23,6 +23,7 @@ def cli():
     aitk scrape   Web scraping
     aitk browser  Browser automation
     aitk notion   Notion project boards
+    aitk mux      tmux session automation
     aitk env      Manage encrypted .env files
     aitk config   Configure credentials
     """
@@ -91,4 +92,5 @@ cli.add_command(search.command, name="search")
 cli.add_command(scrape.group, name="scrape")
 cli.add_command(browser.group, name="browser")
 cli.add_command(notion.group, name="notion")
+cli.add_command(mux.group, name="mux")
 cli.add_command(env_cli.group, name="env")

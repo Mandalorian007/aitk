@@ -39,6 +39,7 @@ export NOTION_API_KEY=ntn_...       # notion
 | `aitk scrape` | Web scraping (Firecrawl) |
 | `aitk browser` | Browser automation (Playwright) |
 | `aitk notion` | Notion project boards |
+| `aitk mux` | tmux session automation |
 | `aitk env` | Encrypted .env file management (age) |
 
 ## Usage
@@ -100,6 +101,31 @@ aitk notion delete <id> --db <id>            # delete (archive) item
 ```
 
 Get your integration token at https://www.notion.com/my-integrations
+
+### tmux Automation
+
+Manage tmux sessions with reliable command execution and output capture using sentinel-based completion detection.
+
+```bash
+aitk mux init                        # verify tmux is installed
+aitk mux create mydev                # create detached session
+aitk mux run mydev "make build"      # run command, wait for output
+aitk mux run mydev "npm test" -t 300 # with 5-min timeout
+aitk mux send mydev "npm start" --enter  # raw keystrokes (no wait)
+aitk mux logs mydev                  # capture pane output
+aitk mux poll mydev "Server ready"   # wait for pattern
+aitk mux list                        # list sessions
+aitk mux kill mydev                  # clean up
+```
+
+**Parallel execution:**
+
+```bash
+aitk mux fanout "echo \$RANDOM" --count 3  # ephemeral parallel sessions
+aitk mux fanout "hostname" -n 5 --json     # JSON output
+```
+
+Sessions are automatically cleaned up after fanout completes.
 
 ### Env Store
 
