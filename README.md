@@ -26,7 +26,6 @@ Or set environment variables:
 export OPENAI_API_KEY=sk-...        # image, video
 export PERPLEXITY_API_KEY=pplx-...  # search
 export FIRECRAWL_API_KEY=fc-...     # scrape
-export NOTION_API_KEY=ntn_...       # notion
 ```
 
 ## Commands
@@ -38,7 +37,6 @@ export NOTION_API_KEY=ntn_...       # notion
 | `aitk search` | Web search (Perplexity) |
 | `aitk scrape` | Web scraping (Firecrawl) |
 | `aitk browser` | Browser automation (Playwright) |
-| `aitk notion` | Notion project boards |
 | `aitk mux` | tmux session automation |
 | `aitk env` | Encrypted .env file management (age) |
 
@@ -87,20 +85,6 @@ aitk browser type "#email" "user@example.com"
 aitk browser a11y                    # accessibility tree
 aitk browser close
 ```
-
-### Notion
-
-```bash
-aitk notion dbs                              # list accessible databases
-aitk notion board --db <id>                  # list items
-aitk notion board --db <id> -s "In progress" # filter by status
-aitk notion add "New task" --db <id>         # create item
-aitk notion view <id> --db <id>              # view item details
-aitk notion move <id> Done --db <id>         # change status
-aitk notion delete <id> --db <id>            # delete (archive) item
-```
-
-Get your integration token at https://www.notion.com/my-integrations
 
 ### tmux Automation
 
