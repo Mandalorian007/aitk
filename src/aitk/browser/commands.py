@@ -45,11 +45,24 @@ def _check_chromium() -> tuple[bool, str]:
         cache = home / "AppData/Local/ms-playwright"
         pattern = "chromium-*/chrome-win/chrome.exe"
     else:
+        # playwright >=1.50 uses chrome-linux64; older versions used chrome-linux
+        linux_patterns = ["chromium-*/chrome-linux64/chrome", "chromium-*/chrome-linux/chrome"]
+        # Search user home cache, PLAYWRIGHT_BROWSERS_PATH env override, and /opt/pw-browsers
+        import os
+        candidate_caches = [
+            Path(os.environ["PLAYWRIGHT_BROWSERS_PATH"]) if "PLAYWRIGHT_BROWSERS_PATH" in os.environ else None,
+            home / ".cache/ms-playwright",
+            Path("/opt/pw-browsers"),
+        ]
+        paths = []
+        for cache in candidate_caches:
+            if cache is None:
+                continue
+            for p in linux_patterns:
+                paths.extend(glob.glob(str(cache / p)))
+        paths = sorted(paths, reverse=True)
         cache = home / ".cache/ms-playwright"
-        pattern = "chromium-*/chrome-linux/chrome"
-
-    paths = sorted(glob.glob(str(cache / pattern)), reverse=True)
-    return (True, paths[0]) if paths else (False, str(cache))
+        return (True, paths[0]) if paths else (False, str(cache))
 
 
 def _is_port_in_use(port: int) -> bool:
