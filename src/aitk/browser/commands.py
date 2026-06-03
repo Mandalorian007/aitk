@@ -34,35 +34,42 @@ def _run_async(f):
 
 
 def _check_chromium() -> tuple[bool, str]:
-    """Check if Playwright Chromium is installed."""
+    """Check if Playwright Chromium is installed.
+
+    Returns (installed, path), where path is the Chromium executable when found,
+    otherwise the default cache directory used in the "not installed" message.
+    """
     system = platform.system()
     home = Path.home()
 
     if system == "Darwin":
-        cache = home / "Library/Caches/ms-playwright"
-        pattern = "chromium-*/chrome-mac/Chromium.app/Contents/MacOS/Chromium"
+        default_cache = home / "Library/Caches/ms-playwright"
+        patterns = ["chromium-*/chrome-mac/Chromium.app/Contents/MacOS/Chromium"]
     elif system == "Windows":
-        cache = home / "AppData/Local/ms-playwright"
-        pattern = "chromium-*/chrome-win/chrome.exe"
+        default_cache = home / "AppData/Local/ms-playwright"
+        patterns = ["chromium-*/chrome-win/chrome.exe"]
     else:
+        default_cache = home / ".cache/ms-playwright"
         # playwright >=1.50 uses chrome-linux64; older versions used chrome-linux
-        linux_patterns = ["chromium-*/chrome-linux64/chrome", "chromium-*/chrome-linux/chrome"]
-        # Search user home cache, PLAYWRIGHT_BROWSERS_PATH env override, and /opt/pw-browsers
-        import os
-        candidate_caches = [
-            Path(os.environ["PLAYWRIGHT_BROWSERS_PATH"]) if "PLAYWRIGHT_BROWSERS_PATH" in os.environ else None,
-            home / ".cache/ms-playwright",
-            Path("/opt/pw-browsers"),
-        ]
-        paths = []
-        for cache in candidate_caches:
-            if cache is None:
-                continue
-            for p in linux_patterns:
-                paths.extend(glob.glob(str(cache / p)))
-        paths = sorted(paths, reverse=True)
-        cache = home / ".cache/ms-playwright"
-        return (True, paths[0]) if paths else (False, str(cache))
+        patterns = ["chromium-*/chrome-linux64/chrome", "chromium-*/chrome-linux/chrome"]
+
+    # Search the PLAYWRIGHT_BROWSERS_PATH override, the platform default cache,
+    # and the common /opt/pw-browsers system location. glob only yields paths
+    # that exist, so partial installs (a versioned dir with no binary) are skipped.
+    browsers_path = os.environ.get("PLAYWRIGHT_BROWSERS_PATH")
+    candidate_caches = [
+        Path(browsers_path) if browsers_path else None,
+        default_cache,
+        Path("/opt/pw-browsers"),
+    ]
+    paths = []
+    for cache in candidate_caches:
+        if cache is None:
+            continue
+        for pattern in patterns:
+            paths.extend(glob.glob(str(cache / pattern)))
+    paths = sorted(paths, reverse=True)
+    return (True, paths[0]) if paths else (False, str(default_cache))
 
 
 def _is_port_in_use(port: int) -> bool:
