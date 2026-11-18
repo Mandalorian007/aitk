@@ -2,6 +2,7 @@
 
 import base64
 import io
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -10,6 +11,10 @@ import click
 from openai import OpenAI
 
 from ..env import requires, get_credential
+
+
+# OpenAI retires image model names; override without a code change via AITK_IMAGE_MODEL.
+MODEL = os.environ.get("AITK_IMAGE_MODEL", "gpt-image-2")
 
 
 def _get_client() -> OpenAI:
@@ -57,7 +62,7 @@ def generate(ctx, prompt, output, reference, size, quality, output_format, backg
         if reference:
             handles = [open(img, "rb") for img in reference]
             params = {
-                "model": "gpt-image-1",
+                "model": MODEL,
                 "image": handles if len(handles) > 1 else handles[0],
                 "prompt": prompt,
                 "n": count,
@@ -72,7 +77,7 @@ def generate(ctx, prompt, output, reference, size, quality, output_format, backg
             result = client.images.edit(**params)
         else:
             params = {
-                "model": "gpt-image-1",
+                "model": MODEL,
                 "prompt": prompt,
                 "n": count,
                 "size": size,
@@ -146,7 +151,7 @@ def edit(ctx, images, prompt, output, size, quality, output_format, background):
     try:
         handles = [open(p, "rb") for p in images]
         params = {
-            "model": "gpt-image-1",
+            "model": MODEL,
             "image": handles if len(handles) > 1 else handles[0],
             "prompt": prompt,
         }

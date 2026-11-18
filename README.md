@@ -51,6 +51,8 @@ aitk image edit -i photo.png "remove the background"
 aitk image emojify large_icon.png
 ```
 
+Uses `gpt-image-2` by default. Set `AITK_IMAGE_MODEL` to use a different OpenAI image model without a code change (e.g. `export AITK_IMAGE_MODEL=gpt-image-1`).
+
 ### Video Generation
 
 ```bash
